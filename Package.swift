@@ -5,11 +5,12 @@ import PackageDescription
 
 let package = Package(
     name: "CryptoExtensions",
+	platforms: [.iOS(.v13), .macOS(.v10_15)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "CryptoExtensions",
-            targets: ["CryptoExtensions"]),
+            targets: ["CBC", "SimpleEncryptor"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -18,11 +19,21 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
-        .target(
-            name: "CryptoExtensions",
-            dependencies: []),
-        .testTarget(
-            name: "CryptoExtensionsTests",
-            dependencies: ["CryptoExtensions"]),
+		.target(
+			name: "Util",
+			dependencies: []),
+		.target(
+			name: "CBC",
+			dependencies: ["Util"]),
+		.target(
+			name: "SimpleEncryptor",
+			dependencies: ["CBC", "Util"]),
+		
+		.testTarget(
+			name: "CBCTests",
+			dependencies: ["CBC"]),
+		.testTarget(
+			name: "SimpleEncryptorTests",
+			dependencies: ["SimpleEncryptor"]),
     ]
 )
