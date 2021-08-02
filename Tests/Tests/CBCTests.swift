@@ -1,6 +1,6 @@
 //
 //  CBCTests.swift
-//  CBCTests
+//  Tests
 //
 //  Created by Gal Yedidovich on 01/08/2021.
 //
@@ -69,9 +69,4 @@ class CBCTests: XCTestCase {
 		//Then
 		XCTAssertEqual(data, decrypted)
 	}
-}
-
-fileprivate func randomString(length: Int) -> String {
-	let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	return String((0..<length).map { _ in letters.randomElement()! })
 }
