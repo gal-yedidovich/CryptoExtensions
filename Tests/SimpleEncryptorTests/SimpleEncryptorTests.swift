@@ -25,16 +25,13 @@ class SimpleEncryptorTests: XCTestCase {
 	
 	func testShouldEncryptFileSuccess() throws {
 		//Given
-		let data = Data(randomString(length: 10_1000).utf8)
+		let data = Data(randomString(length: 10_000).utf8)
 		
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
 		let url = baseURL.appendingPathComponent("data.txt")
 		let encUrl = baseURL.appendingPathComponent("enc_data.txt")
 		let decUrl = baseURL.appendingPathComponent("dec_data.txt")
 		try data.write(to: url)
-		
-//		defer {
-//		}
 		
 		//When
 		try encryptor.encrypt(file: url, to: encUrl)
