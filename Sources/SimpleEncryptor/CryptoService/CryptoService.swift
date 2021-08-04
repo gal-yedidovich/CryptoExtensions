@@ -12,8 +12,10 @@ protocol CryptoService {
 	func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data
 	func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data
 	
-	func encrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) throws
-	func decrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) throws
+	@available(macOS 12.0, iOS 15.0, *)
+	func encrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) async throws
+	@available(macOS 12.0, iOS 15.0, *)
+	func decrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) async throws
 }
 
 public typealias OnProgress = (Int) -> Void

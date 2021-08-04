@@ -6,13 +6,15 @@
 //
 
 import XCTest
-import SimpleEncryptor
+import CryptoKit
+@testable import SimpleEncryptor
 
 class SimpleEncryptorTests: XCTestCase {
-	let encryptor = SimpleEncryptor(type: .gcm)
 	
 	func testShouldEncryptDataSuccess() throws {
 		//Given
+		let encryptor = SimpleEncryptor(type: .gcm)
+		encryptor.keyService = MockKeyService()
 		let data = Data(randomString(length: 100).utf8)
 		
 		//When
@@ -23,8 +25,11 @@ class SimpleEncryptorTests: XCTestCase {
 		XCTAssertEqual(data, dec)
 	}
 	
-	func testShouldEncryptFileSuccess() throws {
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldEncryptFileSuccess() async throws {
 		//Given
+		let encryptor = SimpleEncryptor(type: .gcm)
+		encryptor.keyService = MockKeyService()
 		let data = Data(randomString(length: 10_000).utf8)
 		
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -34,8 +39,8 @@ class SimpleEncryptorTests: XCTestCase {
 		try data.write(to: url)
 		
 		//When
-		try encryptor.encrypt(file: url, to: encUrl)
-		try encryptor.decrypt(file: encUrl, to: decUrl)
+		try await encryptor.encrypt(file: url, to: encUrl)
+		try await encryptor.decrypt(file: encUrl, to: decUrl)
 		
 		//Then
 		let dec = try Data(contentsOf: decUrl)
@@ -45,5 +50,18 @@ class SimpleEncryptorTests: XCTestCase {
 		try FileManager.default.removeItem(at: url)
 		try FileManager.default.removeItem(at: encUrl)
 		try FileManager.default.removeItem(at: decUrl)
+	}
+}
+
+fileprivate struct MockKeyService: KeyService {
+	let fetchResult: Result<SymmetricKey?, Error> = .success(SymmetricKey(size: .bits256))
+	let createResult: Result<SymmetricKey, Error> = .success(SymmetricKey(size: .bits256))
+	
+	func createKey() throws -> SymmetricKey {
+		try createResult.get()
+	}
+	
+	func fetchKey() throws -> SymmetricKey? {
+		try fetchResult.get()
 	}
 }

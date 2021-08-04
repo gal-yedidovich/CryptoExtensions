@@ -20,14 +20,16 @@ struct GCMService: CryptoService {
 		return try AES.GCM.open(box, using: key)
 	}
 	
-	func encrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) throws {
-		try process(file: src, to: dest, using: key, bufferSize: Self.BUFFER_SIZE,
+	@available(macOS 12.0, iOS 15.0, *)
+	func encrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) async throws {
+		try await process(file: src, to: dest, using: key, bufferSize: Self.BUFFER_SIZE,
 						operation: { try encrypt($0, using: key) },
 						onProgress: onProgress)
 	}
 	
-	func decrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) throws {
-		try process(file: src, to: dest, using: key, bufferSize: Self.BUFFER_SIZE + 28,
+	@available(macOS 12.0, iOS 15.0, *)
+	func decrypt(file src: URL, to dest: URL, using key: SymmetricKey, onProgress: OnProgress?) async throws {
+		try await process(file: src, to: dest, using: key, bufferSize: Self.BUFFER_SIZE + 28,
 						operation: { try decrypt($0, using: key) },
 						onProgress: onProgress)
 	}
