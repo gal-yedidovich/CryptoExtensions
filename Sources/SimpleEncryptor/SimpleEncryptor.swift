@@ -21,7 +21,7 @@ public class SimpleEncryptor {
 	]
 	
 	private let cryptoService: CryptoService
-	internal var keyService: KeyService
+	private let keyService: KeyService
 	private var key: SymmetricKey?
 	
 	/// Initialize new SimpleEncryptor
@@ -32,7 +32,6 @@ public class SimpleEncryptor {
 	public convenience init(type: CryptoServiceType, keychasinQuery query: KeychainParameters = .init()) {
 		let keyService = KeychainKeyService(param: query)
 		self.init(type: type, keyService: keyService)
-		
 	}
 	
 	
@@ -43,7 +42,6 @@ public class SimpleEncryptor {
 	internal init(type: CryptoServiceType, keyService: KeyService) {
 		self.cryptoService = type.service
 		self.keyService = keyService
-		
 	}
 	
 	/// Encrypt data with CGM encryption, and returns the encrypted data in result

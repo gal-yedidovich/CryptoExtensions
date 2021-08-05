@@ -13,8 +13,7 @@ class SimpleEncryptorTests: XCTestCase {
 	
 	func testShouldEncryptDataSuccess() throws {
 		//Given
-		let encryptor = SimpleEncryptor(type: .gcm)
-		encryptor.keyService = MockKeyService()
+		let encryptor = createEncryptor()
 		let data = Data(randomString(length: 100).utf8)
 		
 		//When
@@ -28,8 +27,7 @@ class SimpleEncryptorTests: XCTestCase {
 	@available(macOS 12.0, iOS 15.0, *)
 	func testShouldEncryptFileSuccess() async throws {
 		//Given
-		let encryptor = SimpleEncryptor(type: .gcm)
-		encryptor.keyService = MockKeyService()
+		let encryptor = createEncryptor()
 		let data = Data(randomString(length: 10_000).utf8)
 		
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -50,6 +48,10 @@ class SimpleEncryptorTests: XCTestCase {
 		try FileManager.default.removeItem(at: url)
 		try FileManager.default.removeItem(at: encUrl)
 		try FileManager.default.removeItem(at: decUrl)
+	}
+	
+	private func createEncryptor() -> SimpleEncryptor {
+		SimpleEncryptor(type: .gcm, keyService: MockKeyService())
 	}
 }
 
