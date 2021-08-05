@@ -26,7 +26,7 @@ public class SimpleEncryptor {
 	
 	/// Initialize new SimpleEncryptor
 	/// - Parameters:
-	///   - strategy: the cipher implementation, can be either GCM or CBC.
+	///   - type: the cipher implementation, can be either GCM or CBC.
 	///   - keyAccess: control when the encryption key is accessible, default is `AfterFirstUnlock`.
 	///   - keychainQuery: A Dictionary, representing keychain query params. it is used to store & fetch the encryption key.
 	public convenience init(type: CryptoServiceType,
@@ -37,6 +37,11 @@ public class SimpleEncryptor {
 		
 	}
 	
+	
+	/// Initialize new SimpleEncryptor
+	/// - Parameters:
+	///   - type: the cipher implementation, can be either GCM or CBC.
+	///   - keyService: the key store service, that provides encryption keys
 	internal init(type: CryptoServiceType, keyService: KeyService) {
 		self.cryptoService = type.service
 		self.keyService = keyService
