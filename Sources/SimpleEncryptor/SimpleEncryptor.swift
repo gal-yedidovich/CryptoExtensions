@@ -29,10 +29,8 @@ public class SimpleEncryptor {
 	///   - type: the cipher implementation, can be either GCM or CBC.
 	///   - keyAccess: control when the encryption key is accessible, default is `AfterFirstUnlock`.
 	///   - keychainQuery: A Dictionary, representing keychain query params. it is used to store & fetch the encryption key.
-	public convenience init(type: CryptoServiceType,
-				keyAccess: CFString = kSecAttrAccessibleAfterFirstUnlock,
-				keychainQuery: [CFString: Any] = defaultKeychainQuery) {
-		let keyService = KeychainKeyService(keyAccess: keyAccess, keychainQuery: keychainQuery)
+	public convenience init(type: CryptoServiceType, keychasinQuery query: KeychainParameters = .init()) {
+		let keyService = KeychainKeyService(param: query)
 		self.init(type: type, keyService: keyService)
 		
 	}

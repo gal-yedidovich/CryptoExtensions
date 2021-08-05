@@ -14,14 +14,14 @@ protocol KeyService {
 }
 
 struct KeychainKeyService: KeyService {
-	let keyAccess: CFString
-	let keychainQuery: [CFString: Any]
+	let param: SimpleEncryptor.KeychainParameters
 	
 	func fetchKey() throws -> SymmetricKey? {
-		var copy = keychainQuery
-		copy[kSecReturnData] = true
+		var query = param.queryDictionary
+		query[kSecReturnData] = true
+		
 		var item: CFTypeRef? //reference to the result
-		let readStatus = SecItemCopyMatching(copy as CFDictionary, &item)
+		let readStatus = SecItemCopyMatching(query as CFDictionary, &item)
 		switch readStatus {
 		case errSecSuccess: return SymmetricKey(data: item as! Data) // Convert back to a key.
 		case errSecItemNotFound: return nil
@@ -31,11 +31,11 @@ struct KeychainKeyService: KeyService {
 	
 	func createKey() throws -> SymmetricKey {
 		let newKey = SymmetricKey(size: .bits256) //create new key
-		var copy = keychainQuery
-		copy[kSecAttrAccessible] = keyAccess
-		copy[kSecValueData] = newKey.dataRepresentation //request to get the result (key) as data
+		var query = param.queryDictionary
+		query[kSecAttrAccessible] = param.keyAccess
+		query[kSecValueData] = newKey.dataRepresentation //request to get the result (key) as data
 		
-		let status = SecItemAdd(copy as CFDictionary, nil)
+		let status = SecItemAdd(query as CFDictionary, nil)
 		guard status == errSecSuccess else {
 			throw Errors.storeKeyError(status)
 		}
