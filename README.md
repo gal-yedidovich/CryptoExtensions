@@ -7,7 +7,7 @@
 #### SimpleEncryptor example (with CBC)
 ```swift
 let data = Data("I am Groot!".utf8)
-let encryptor = SimpleEncryptor(strategy: .cbc(iv: Data(...)))
+let encryptor = SimpleEncryptor(type: .cbc(iv: Data(...)))
 
 do {
 	let encrypted = try encryptor.encrypt(data) 
