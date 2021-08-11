@@ -65,7 +65,6 @@ class CBCTests: XCTestCase {
 		}
 		decrypted += try cipher.finalize()
 		
-
 		//Then
 		XCTAssertEqual(data, decrypted)
 	}

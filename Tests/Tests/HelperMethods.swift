@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  File
+//  HelperMethods.swift
+//  Tests
 //
 //  Created by Gal Yedidovich on 02/08/2021.
 //

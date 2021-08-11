@@ -34,7 +34,6 @@ public class SimpleEncryptor {
 		self.init(type: type, keyService: keyService)
 	}
 	
-	
 	/// Initialize new SimpleEncryptor
 	/// - Parameters:
 	///   - type: the cipher implementation, can be either GCM or CBC.
@@ -54,7 +53,6 @@ public class SimpleEncryptor {
 	
 	/// Deccrypt data with CGM decryption, and returns the original (clear-text) data in result
 	/// - Parameter data: Encrypted data to decipher.
-	/// - Throws: check exception
 	/// - Returns: original, Clear-Text data
 	public func decrypt(data: Data) throws -> Data {
 		let key = try getKey()
