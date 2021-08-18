@@ -1,6 +1,6 @@
 ## CryptoExtensions
 ### Awesome encryption & decryption APIs, including:
-* `SimpleEncryptor` class, great for convenience crypto operations (data and/or big files), using keychain to store keys.
+* `SimpleEncryptor` class, great for convenience crypto operations (data & files), using keychain to store keys.
 * `AES/CBC` implementation in Swift, on top of "Common Crypto" implementation.
 * useful "crypto" extension methods.
 
@@ -18,6 +18,11 @@ do {
 	//handle cryptographic errors
 }
 ```
+
+`SimpleEncryptor` now supports these algorithms:
+ - AES.CBC
+ - AES.GCM
+ - ChaChaPoly
 
 #### Basic CBC cryptographic example:
 ```swift
