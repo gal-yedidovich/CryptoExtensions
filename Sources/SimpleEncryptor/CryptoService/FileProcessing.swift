@@ -14,8 +14,8 @@ typealias StreamsBlock = (InputStream, OutputStream) async throws -> ()
 
 @available(macOS 12.0, iOS 15.0, *)
 func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: Int = 32 * 1000,
-				 operation: Operation, finalOperation: FinalOperation? = nil,
-				 onProgress: OnProgress?) async throws {
+			 operation: Operation, finalOperation: FinalOperation? = nil,
+			 onProgress: OnProgress?) async throws {
 	try await stream(from: src, to: dest) { input, output in
 		let fileSize = src.fileSize!
 		var offset: Int = 0

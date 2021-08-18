@@ -11,9 +11,38 @@ import CryptoKit
 
 class SimpleEncryptorTests: XCTestCase {
 	
-	func testShouldEncryptDataSuccess() throws {
+	func testShouldEncryptGCMDataSuccess() throws {
+		try testDataEncryption(withType: .gcm)
+	}
+	
+	func testShouldEncryptCBCDataSuccess() throws {
+		let iv = Data(randomString(length: 16).utf8)
+		try testDataEncryption(withType: .cbc(iv: iv))
+	}
+	
+	func testShouldEncryptChachaPolyDataSuccess() throws {
+		try testDataEncryption(withType: .chachaPoly)
+	}
+	
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldEncryptGCMFileSuccess() async throws {
+		try await testFileEncryption(withType: .gcm)
+	}
+	
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldEncryptCBCFileSuccess() async throws {
+		let iv = Data(randomString(length: 16).utf8)
+		try await testFileEncryption(withType: .cbc(iv: iv))
+	}
+	
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldEncryptChachaPolyFileSuccess() async throws {
+		try await testFileEncryption(withType: .chachaPoly)
+	}
+	
+	private func testDataEncryption(withType type: CryptoServiceType) throws {
 		//Given
-		let encryptor = createEncryptor()
+		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())
 		let data = Data(randomString(length: 100).utf8)
 		
 		//When
@@ -25,9 +54,9 @@ class SimpleEncryptorTests: XCTestCase {
 	}
 	
 	@available(macOS 12.0, iOS 15.0, *)
-	func testShouldEncryptFileSuccess() async throws {
+	private func testFileEncryption(withType type: CryptoServiceType) async throws {
 		//Given
-		let encryptor = createEncryptor()
+		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())
 		let data = Data(randomString(length: 10_000).utf8)
 		
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -43,15 +72,10 @@ class SimpleEncryptorTests: XCTestCase {
 		//Then
 		let dec = try Data(contentsOf: decUrl)
 		XCTAssertEqual(data, dec)
-
-
+		
 		try FileManager.default.removeItem(at: url)
 		try FileManager.default.removeItem(at: encUrl)
 		try FileManager.default.removeItem(at: decUrl)
-	}
-	
-	private func createEncryptor() -> SimpleEncryptor {
-		SimpleEncryptor(type: .gcm, keyService: MockKeyService())
 	}
 }
 

@@ -13,11 +13,15 @@ public enum CryptoServiceType {
 	case cbc(iv: Data)
 	///`AES/GCM` implementation
 	case gcm
+	///`ChaChaPoly` implementation
+	case chachaPoly
 	
 	internal var service: CryptoService {
 		switch self {
 		case .cbc(let iv):
 			return CBCService(iv: iv)
+		case .chachaPoly:
+			return ChaChaPolyService()
 		default:
 			return GCMService()
 		}

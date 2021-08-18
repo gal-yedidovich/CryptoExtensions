@@ -1,23 +1,23 @@
 //
-//  GCMService.swift
+//  ChaChaPolyService.swift
 //  SimpleEncryptor
 //
-//  Created by Gal Yedidovich on 02/08/2021.
+//  Created by Gal Yedidovich on 11/08/2021.
 //
 
 import Foundation
 import CryptoKit
 
-struct GCMService: CryptoService {
+struct ChaChaPolyService: CryptoService {
 	private static let BUFFER_SIZE = 1024 * 32
 	
 	func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
-		try AES.GCM.seal(data, using: key).combined!
+		try ChaChaPoly.seal(data, using: key).combined
 	}
 	
 	func decrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
-		let box = try AES.GCM.SealedBox(combined: data)
-		return try AES.GCM.open(box, using: key)
+		let box = try ChaChaPoly.SealedBox(combined: data)
+		return try ChaChaPoly.open(box, using: key)
 	}
 	
 	@available(macOS 12.0, iOS 15.0, *)
