@@ -29,7 +29,7 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 			output.write(data: try operation(data))
 			count = (count + 1) % 10
 			if count == 0 {
-				await Task.suspend()
+				await Task.yield()
 			}
 		}
 		
@@ -39,6 +39,7 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 	}
 }
 
+@available(macOS 12.0, iOS 15.0, *)
 private func stream(from src: URL, to dest: URL, operation: StreamsBlock) async throws {
 	let fm = FileManager.default
 	
@@ -72,6 +73,7 @@ extension URL {
 extension InputStream {
 	typealias Buffer = [UInt8]
 	
+	@available(macOS 12.0, iOS 15.0, *)
 	func readAll(bufferSize: Int, block: (Buffer, Int) async throws -> Void) async rethrows {
 		open()
 		defer { close() }
