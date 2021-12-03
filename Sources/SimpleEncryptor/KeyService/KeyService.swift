@@ -50,7 +50,7 @@ struct KeychainKeyService: KeyService {
 		var errorDescription: String? {
 			switch self {
 			case .fetchKeyError(let status):
-				return "unable to fetch key, os-status: '\(status)'"
+				return "Unable to fetch key, os-status: '\(status)'"
 			case .storeKeyError(let status):
 				return "Unable to store key, os-status: '\(status)'"
 			}
