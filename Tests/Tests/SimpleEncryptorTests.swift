@@ -40,6 +40,23 @@ class SimpleEncryptorTests: XCTestCase {
 		try await testFileEncryption(withType: .chachaPoly)
 	}
 	
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldThrowErrorWhenFileNotFound() async {
+		//Given
+		let encryptor = SimpleEncryptor(type: .gcm, keyService: MockKeyService())
+		
+		let src = URL(fileURLWithPath: "notFoundSrc.txt")
+		let dest = URL(fileURLWithPath: "notFoundDest.txt")
+		
+		//When
+		do {
+			try await encryptor.encrypt(file: src, to: dest)
+			XCTFail("Should throw an error")
+		} catch {
+			XCTAssertEqual(error.localizedDescription, ProccessingError.fileNotFound.localizedDescription)
+		}
+	}
+	
 	private func testDataEncryption(withType type: CryptoServiceType) throws {
 		//Given
 		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())

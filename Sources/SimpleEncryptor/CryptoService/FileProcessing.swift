@@ -17,7 +17,11 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 			 operation: Operation, finalOperation: FinalOperation? = nil,
 			 onProgress: OnProgress?) async throws {
 	try await stream(from: src, to: dest) { input, output in
-		let fileSize = src.fileSize!
+		
+		guard let fileSize = src.fileSize else {
+			throw ProccessingError.fileNotFound
+		}
+		
 		var offset: Int = 0
 		var count = 0
 		
@@ -47,8 +51,12 @@ private func stream(from src: URL, to dest: URL, operation: StreamsBlock) async 
 	try fm.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
 	let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
 	
-	let input = InputStream(url: src)!
-	let output = OutputStream(url: tempFile, append: false)!
+	guard let input = InputStream(url: src) else {
+		throw ProccessingError.failedToCreateInputStream
+	}
+	guard let output = OutputStream(url: tempFile, append: false) else {
+		throw ProccessingError.failedToCreateOutputStream
+	}
 	
 	output.open()
 	defer { output.close() }
@@ -92,5 +100,19 @@ extension OutputStream {
 	func write(data: Data) {
 		let buffer = [UInt8](data)
 		write(buffer, maxLength: buffer.count)
+	}
+}
+
+enum ProccessingError: LocalizedError {
+	case fileNotFound
+	case failedToCreateInputStream
+	case failedToCreateOutputStream
+	
+	var errorDescription: String? {
+		switch self {
+		case .fileNotFound: return "Source file not found"
+		case .failedToCreateInputStream: return "Failed to create input stream from source file"
+		case .failedToCreateOutputStream: return "Failed to create output stream to destination file"
+		}
 	}
 }
