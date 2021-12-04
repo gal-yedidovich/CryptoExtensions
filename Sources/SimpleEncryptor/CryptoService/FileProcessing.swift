@@ -10,27 +10,27 @@ import CryptoKit
 
 typealias Operation = (Data) throws -> Data
 typealias FinalOperation = () throws -> Data
-typealias StreamsBlock = (InputStream, OutputStream) async throws -> ()
+typealias SafeStreamBlock = (OutputStream) async throws -> ()
 
 @available(macOS 12.0, iOS 15.0, *)
 func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: Int = 32 * 1000,
 			 operation: Operation, finalOperation: FinalOperation? = nil,
 			 onProgress: OnProgress?) async throws {
-	try await stream(from: src, to: dest) { input, output in
-		
-		guard let fileSize = src.fileSize else {
-			throw ProccessingError.fileNotFound
-		}
-		
+	guard let fileSize = src.fileSize else {
+		throw ProccessingError.fileNotFound
+	}
+	
+	try await safeStream(to: dest) { output in
 		var offset: Int = 0
 		var count = 0
 		
-		try await input.readAll(bufferSize: bufferSize) { buffer, bytesRead in
-			offset += bytesRead
+		try await src.batchBytes(batchSize: bufferSize) { batch in
+			offset += batch.count
 			onProgress?(Int((offset * 100) / fileSize))
 			
-			let data = Data(bytes: buffer, count: bytesRead)
-			output.write(data: try operation(data))
+			let processedData = try operation(batch)
+			output.write(data: processedData)
+			
 			count = (count + 1) % 10
 			if count == 0 {
 				await Task.yield()
@@ -44,16 +44,13 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 }
 
 @available(macOS 12.0, iOS 15.0, *)
-private func stream(from src: URL, to dest: URL, operation: StreamsBlock) async throws {
+private func safeStream(to dest: URL, operation: SafeStreamBlock) async throws {
 	let fm = FileManager.default
 	
 	let tempDir = fm.temporaryDirectory
 	try fm.createDirectory(at: tempDir, withIntermediateDirectories: true, attributes: nil)
 	let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
 	
-	guard let input = InputStream(url: src) else {
-		throw ProccessingError.failedToCreateInputStream
-	}
 	guard let output = OutputStream(url: tempFile, append: false) else {
 		throw ProccessingError.failedToCreateOutputStream
 	}
@@ -61,7 +58,7 @@ private func stream(from src: URL, to dest: URL, operation: StreamsBlock) async 
 	output.open()
 	defer { output.close() }
 	
-	try await operation(input, output)
+	try await operation(output)
 	
 	if fm.fileExists(atPath: dest.path) {
 		try fm.removeItem(at: dest)
@@ -76,22 +73,26 @@ extension URL {
 		let values = try? resourceValues(forKeys: [.fileSizeKey])
 		return values?.fileSize
 	}
-}
-
-extension InputStream {
-	typealias Buffer = [UInt8]
 	
+	/// Iterates on AsyncBytes and calls on a batch handler when batch is full, or when al bytes have been read.
+	/// - Parameters:
+	///   - batchSize: maximum number of bytes to read before calling the handler.
+	///   - block: a batch handler
 	@available(macOS 12.0, iOS 15.0, *)
-	func readAll(bufferSize: Int, block: (Buffer, Int) async throws -> Void) async rethrows {
-		open()
-		defer { close() }
+	func batchBytes(batchSize: Int, block: (Data) async throws -> Void) async rethrows {
+		var batch = Data()
 		
-		var buffer = [UInt8](repeating: 0, count: bufferSize)
-		while hasBytesAvailable {
-			let bytesRead = read(&buffer, maxLength: buffer.count)
-			guard bytesRead > 0 else { break }
+		for try await byte in resourceBytes {
+			batch.append(byte)
 			
-			try await block(buffer, bytesRead)
+			if batch.count == batchSize {
+				try await block(batch)
+				batch = Data()
+			}
+		}
+		
+		if !batch.isEmpty {
+			try await block(batch)
 		}
 	}
 }
@@ -105,13 +106,11 @@ extension OutputStream {
 
 enum ProccessingError: LocalizedError {
 	case fileNotFound
-	case failedToCreateInputStream
 	case failedToCreateOutputStream
 	
 	var errorDescription: String? {
 		switch self {
 		case .fileNotFound: return "Source file not found"
-		case .failedToCreateInputStream: return "Failed to create input stream from source file"
 		case .failedToCreateOutputStream: return "Failed to create output stream to destination file"
 		}
 	}
