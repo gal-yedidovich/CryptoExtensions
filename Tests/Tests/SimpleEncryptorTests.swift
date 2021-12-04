@@ -57,6 +57,33 @@ class SimpleEncryptorTests: XCTestCase {
 		}
 	}
 	
+	@available(macOS 12.0, iOS 15.0, *)
+	func testShouldCallProgressTenTimes() async throws {
+		//Given
+		let BUFFER_SIZE: Int = ChaChaPolyService.BUFFER_SIZE
+		let EXPECTED_NUMBER_OF_STEPS = 10
+
+		let encryptor = SimpleEncryptor(type: .chachaPoly, keyService: MockKeyService())
+		let data = Data(randomString(length: BUFFER_SIZE * EXPECTED_NUMBER_OF_STEPS).utf8)
+		var count = 0
+		
+		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+		let url = baseURL.appendingPathComponent("data.txt")
+		let encUrl = baseURL.appendingPathComponent("enc_data.txt")
+		try data.write(to: url)
+		
+		//When
+		try await encryptor.encrypt(file: url, to: encUrl) { progress in
+			count += 1
+		}
+		
+		//Then
+		XCTAssertEqual(count, EXPECTED_NUMBER_OF_STEPS)
+		
+		try FileManager.default.removeItem(at: url)
+		try FileManager.default.removeItem(at: encUrl)
+	}
+	
 	private func testDataEncryption(withType type: CryptoServiceType) throws {
 		//Given
 		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())

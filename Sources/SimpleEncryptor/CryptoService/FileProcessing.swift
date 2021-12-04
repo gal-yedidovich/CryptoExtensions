@@ -24,11 +24,12 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 		var offset: Int = 0
 		var count = 0
 		
-		try await src.batchBytes(batchSize: bufferSize) { batch in
+		let batches = src.resourceBytes.chunked(countOf: bufferSize)
+		for try await batch in batches {
 			offset += batch.count
 			onProgress?(Int((offset * 100) / fileSize))
 			
-			let processedData = try operation(batch)
+			let processedData = try operation(Data(batch))
 			output.write(data: processedData)
 			
 			count = (count + 1) % 10
@@ -73,28 +74,6 @@ extension URL {
 		let values = try? resourceValues(forKeys: [.fileSizeKey])
 		return values?.fileSize
 	}
-	
-	/// Iterates on AsyncBytes and calls on a batch handler when batch is full, or when al bytes have been read.
-	/// - Parameters:
-	///   - batchSize: maximum number of bytes to read before calling the handler.
-	///   - block: a batch handler
-	@available(macOS 12.0, iOS 15.0, *)
-	func batchBytes(batchSize: Int, block: (Data) async throws -> Void) async rethrows {
-		var batch = Data()
-		
-		for try await byte in resourceBytes {
-			batch.append(byte)
-			
-			if batch.count == batchSize {
-				try await block(batch)
-				batch = Data()
-			}
-		}
-		
-		if !batch.isEmpty {
-			try await block(batch)
-		}
-	}
 }
 
 extension OutputStream {
@@ -112,6 +91,40 @@ enum ProccessingError: LocalizedError {
 		switch self {
 		case .fileNotFound: return "Source file not found"
 		case .failedToCreateOutputStream: return "Failed to create output stream to destination file"
+		}
+	}
+}
+
+@available(macOS 12.0, iOS 15.0, *)
+extension AsyncSequence {
+	func chunked(countOf chunkSize: Int) -> AsyncChunkedSequence<Self> {
+		AsyncChunkedSequence(sequence: self, chunkSize: chunkSize)
+	}
+}
+
+@available(macOS 12.0, iOS 15.0, *)
+struct AsyncChunkedSequence<AsyncSeq : AsyncSequence>: AsyncSequence {
+	typealias Element = [AsyncSeq.Element]
+	
+	let sequence: AsyncSeq
+	let chunkSize: Int
+	
+	func makeAsyncIterator() -> AsyncIterator {
+		AsyncIterator(innerIterator: sequence.makeAsyncIterator(), chunkSize: chunkSize)
+	}
+	
+	struct AsyncIterator: AsyncIteratorProtocol {
+		var innerIterator: AsyncSeq.AsyncIterator
+		let chunkSize: Int
+		
+		mutating func next() async throws -> Element? {
+			var chunk: Element = []
+			
+			while chunk.count < chunkSize, let value = try await innerIterator.next() {
+				chunk.append(value)
+			}
+			
+			return chunk.isEmpty ? nil : chunk
 		}
 	}
 }
