@@ -9,7 +9,7 @@ import Foundation
 import CryptoKit
 
 struct ChaChaPolyService: CryptoService {
-	private static let BUFFER_SIZE = 1024 * 32
+	static let BUFFER_SIZE = 1024 * 32
 	
 	func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data {
 		try ChaChaPoly.seal(data, using: key).combined
