@@ -8,7 +8,7 @@
 
 @available(macOS 12.0, iOS 15.0, *)
 extension AsyncSequence {
-	func chunked(countOf chunkSize: Int) -> AsyncChunkedSequence<Self> {
+	func chunked(upTo chunkSize: Int) -> AsyncChunkedSequence<Self> {
 		AsyncChunkedSequence(sequence: self, chunkSize: chunkSize)
 	}
 }

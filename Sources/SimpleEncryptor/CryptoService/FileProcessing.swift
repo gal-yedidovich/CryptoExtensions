@@ -24,7 +24,7 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 		var offset: Int = 0
 		var count = 0
 		
-		let batches = src.resourceBytes.chunked(countOf: bufferSize)
+		let batches = src.resourceBytes.chunked(upTo: bufferSize)
 		for try await batch in batches {
 			offset += batch.count
 			onProgress?(Int((offset * 100) / fileSize))
