@@ -32,7 +32,7 @@ struct KeychainKeyService: KeyService {
 	func createKey() throws -> SymmetricKey {
 		let newKey = SymmetricKey(size: .bits256) //create new key
 		var query = param.queryDictionary
-		query[kSecAttrAccessible] = param.keyAccess
+		query[kSecAttrAccessible] = param.keyAccess.value
 		query[kSecValueData] = newKey.dataRepresentation //request to get the result (key) as data
 		
 		let status = SecItemAdd(query as CFDictionary, nil)
