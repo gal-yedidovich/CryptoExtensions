@@ -47,7 +47,7 @@ class CBCTests: XCTestCase {
 		XCTAssertEqual(data, decrypted)
 	}
 
-	func testShouldCipherFileSuccess() throws {
+	func testShouldCipherStreamSuccess() throws {
 		//Given
 		let data = Data(randomString(length: 10_000).utf8)
 		let encrypted = try AES.CBC.encrypt(data, using: key, iv: iv)
