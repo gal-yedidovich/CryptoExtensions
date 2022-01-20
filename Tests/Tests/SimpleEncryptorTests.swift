@@ -73,15 +73,45 @@ class SimpleEncryptorTests: XCTestCase {
 		try data.write(to: url)
 		
 		//When
-		try await encryptor.encrypt(file: url, to: encUrl) { progress in
-			count += 1
-		}
+		try await encryptor.encrypt(file: url, to: encUrl) { progress in count += 1 }
 		
 		//Then
 		XCTAssertEqual(count, EXPECTED_NUMBER_OF_STEPS)
 		
 		try FileManager.default.removeItem(at: url)
 		try FileManager.default.removeItem(at: encUrl)
+	}
+	
+	func testShouldThrowErrorWhenFailsToCreateKey() {
+		//Given
+		let EXPECTED_ERROR: KeychainError = KeychainError.storeKeyError(-1)
+		let keyService = MockKeyService(fetchResult: .success(nil), createResult: .failure(EXPECTED_ERROR))
+		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
+		let data = Data(randomString(length: 100).utf8)
+		
+		//When
+		do {
+			_ = try encryptor.encrypt(data: data)
+			XCTFail("Should throw an error")
+		} catch {
+			XCTAssertEqual(error.localizedDescription, EXPECTED_ERROR.localizedDescription)
+		}
+	}
+	
+	func testShouldThrowErrorWhenFailsToFetchKey() {
+		//Given
+		let EXPECTED_ERROR: KeychainError = KeychainError.storeKeyError(-1)
+		let keyService = MockKeyService(fetchResult: .failure(EXPECTED_ERROR))
+		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
+		let data = Data(randomString(length: 100).utf8)
+		
+		//When
+		do {
+			_ = try encryptor.encrypt(data: data)
+			XCTFail("Should throw an error")
+		} catch {
+			XCTAssertEqual(error.localizedDescription, EXPECTED_ERROR.localizedDescription)
+		}
 	}
 	
 	private func testDataEncryption(withType type: CryptoServiceType) throws {
@@ -124,8 +154,8 @@ class SimpleEncryptorTests: XCTestCase {
 }
 
 fileprivate struct MockKeyService: KeyService {
-	let fetchResult: Result<SymmetricKey?, Error> = .success(SymmetricKey(size: .bits256))
-	let createResult: Result<SymmetricKey, Error> = .success(SymmetricKey(size: .bits256))
+	var fetchResult: Result<SymmetricKey?, Error> = .success(SymmetricKey(size: .bits256))
+	var createResult: Result<SymmetricKey, Error> = .success(SymmetricKey(size: .bits256))
 	
 	func createKey() throws -> SymmetricKey {
 		try createResult.get()

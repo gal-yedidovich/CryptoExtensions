@@ -25,7 +25,7 @@ struct KeychainKeyService: KeyService {
 		switch readStatus {
 		case errSecSuccess: return SymmetricKey(data: item as! Data) // Convert back to a key.
 		case errSecItemNotFound: return nil
-		default: throw Errors.fetchKeyError(readStatus)
+		default: throw KeychainError.fetchKeyError(readStatus)
 		}
 	}
 	
@@ -37,23 +37,23 @@ struct KeychainKeyService: KeyService {
 		
 		let status = SecItemAdd(query as CFDictionary, nil)
 		guard status == errSecSuccess else {
-			throw Errors.storeKeyError(status)
+			throw KeychainError.storeKeyError(status)
 		}
 		
 		return newKey
 	}
+}
+
+enum KeychainError: LocalizedError {
+	case fetchKeyError(OSStatus)
+	case storeKeyError(OSStatus)
 	
-	private enum Errors: LocalizedError {
-		case fetchKeyError(OSStatus)
-		case storeKeyError(OSStatus)
-		
-		var errorDescription: String? {
-			switch self {
-			case .fetchKeyError(let status):
-				return "Unable to fetch key, os-status: '\(status)'"
-			case .storeKeyError(let status):
-				return "Unable to store key, os-status: '\(status)'"
-			}
+	var errorDescription: String? {
+		switch self {
+		case .fetchKeyError(let status):
+			return "Unable to fetch key, os-status: '\(status)'"
+		case .storeKeyError(let status):
+			return "Unable to store key, os-status: '\(status)'"
 		}
 	}
 }
