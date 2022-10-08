@@ -86,7 +86,7 @@ class SimpleEncryptorTests: XCTestCase {
 	func testShouldThrowErrorWhenFailsToCreateKey() {
 		//Given
 		let EXPECTED_ERROR: KeychainError = .storeKeyError(errSecAuthFailed)
-		let keyService = MockKeyService(createResult: .failure(EXPECTED_ERROR))
+		let keyService = MockKeyService(fetchResult: .success(nil), createResult: .failure(EXPECTED_ERROR))
 		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
 		let data = randomData(length: 100)
 		
