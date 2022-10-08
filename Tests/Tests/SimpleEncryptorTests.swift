@@ -16,7 +16,7 @@ class SimpleEncryptorTests: XCTestCase {
 	}
 	
 	func testShouldEncryptCBCDataSuccess() throws {
-		let iv = Data(randomString(length: 16).utf8)
+		let iv = randomData(length: 16)
 		try testDataEncryption(withType: .cbc(iv: iv))
 	}
 	
@@ -31,7 +31,7 @@ class SimpleEncryptorTests: XCTestCase {
 	
 	@available(macOS 12.0, iOS 15.0, *)
 	func testShouldEncryptCBCFileSuccess() async throws {
-		let iv = Data(randomString(length: 16).utf8)
+		let iv = randomData(length: 16)
 		try await testFileEncryption(withType: .cbc(iv: iv))
 	}
 	
@@ -49,6 +49,7 @@ class SimpleEncryptorTests: XCTestCase {
 		let dest = URL(fileURLWithPath: "notFoundDest.txt")
 		
 		//When
+		//Then
 		do {
 			try await encryptor.encrypt(file: src, to: dest)
 			XCTFail("Should throw an error")
@@ -60,11 +61,10 @@ class SimpleEncryptorTests: XCTestCase {
 	@available(macOS 12.0, iOS 15.0, *)
 	func testShouldCallProgressTenTimes() async throws {
 		//Given
-		let BUFFER_SIZE: Int = ChaChaPolyService.BUFFER_SIZE
 		let EXPECTED_NUMBER_OF_STEPS = 10
-
+		
 		let encryptor = SimpleEncryptor(type: .chachaPoly, keyService: MockKeyService())
-		let data = Data(randomString(length: BUFFER_SIZE * EXPECTED_NUMBER_OF_STEPS).utf8)
+		let data = randomData(length: ChaChaPolyService.BUFFER_SIZE * EXPECTED_NUMBER_OF_STEPS)
 		var count = 0
 		
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -78,38 +78,35 @@ class SimpleEncryptorTests: XCTestCase {
 		//Then
 		XCTAssertEqual(count, EXPECTED_NUMBER_OF_STEPS)
 		
+		//Clean
 		try FileManager.default.removeItem(at: url)
 		try FileManager.default.removeItem(at: encUrl)
 	}
 	
 	func testShouldThrowErrorWhenFailsToCreateKey() {
 		//Given
-		let EXPECTED_ERROR: KeychainError = KeychainError.storeKeyError(-1)
+		let EXPECTED_ERROR: KeychainError = .storeKeyError(errSecAuthFailed)
 		let keyService = MockKeyService(fetchResult: .success(nil), createResult: .failure(EXPECTED_ERROR))
 		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
-		let data = Data(randomString(length: 100).utf8)
+		let data = randomData(length: 100)
 		
 		//When
-		do {
-			_ = try encryptor.encrypt(data: data)
-			XCTFail("Should throw an error")
-		} catch {
+		//Then
+		XCTAssertThrowsError(try encryptor.encrypt(data: data)) { error in
 			XCTAssertEqual(error.localizedDescription, EXPECTED_ERROR.localizedDescription)
 		}
 	}
 	
 	func testShouldThrowErrorWhenFailsToFetchKey() {
 		//Given
-		let EXPECTED_ERROR: KeychainError = KeychainError.storeKeyError(-1)
+		let EXPECTED_ERROR: KeychainError = .storeKeyError(errSecAuthFailed)
 		let keyService = MockKeyService(fetchResult: .failure(EXPECTED_ERROR))
 		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
-		let data = Data(randomString(length: 100).utf8)
+		let data = randomData(length: 100)
 		
 		//When
-		do {
-			_ = try encryptor.encrypt(data: data)
-			XCTFail("Should throw an error")
-		} catch {
+		//Then
+		XCTAssertThrowsError(try encryptor.encrypt(data: data)) { error in
 			XCTAssertEqual(error.localizedDescription, EXPECTED_ERROR.localizedDescription)
 		}
 	}
@@ -117,7 +114,7 @@ class SimpleEncryptorTests: XCTestCase {
 	private func testDataEncryption(withType type: CryptoServiceType) throws {
 		//Given
 		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())
-		let data = Data(randomString(length: 100).utf8)
+		let data = randomData(length: 100)
 		
 		//When
 		let enc = try encryptor.encrypt(data: data)
@@ -131,8 +128,8 @@ class SimpleEncryptorTests: XCTestCase {
 	private func testFileEncryption(withType type: CryptoServiceType) async throws {
 		//Given
 		let encryptor = SimpleEncryptor(type: type, keyService: MockKeyService())
-		let data = Data(randomString(length: 10_000).utf8)
-		
+		let data = randomData(length: 10_000)
+
 		let baseURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
 		let url = baseURL.appendingPathComponent("data.txt")
 		let encUrl = baseURL.appendingPathComponent("enc_data.txt")
@@ -154,8 +151,8 @@ class SimpleEncryptorTests: XCTestCase {
 }
 
 fileprivate struct MockKeyService: KeyService {
-	var fetchResult: Result<SymmetricKey?, Error> = .success(SymmetricKey(size: .bits256))
-	var createResult: Result<SymmetricKey, Error> = .success(SymmetricKey(size: .bits256))
+	var fetchResult: Result<SymmetricKey?, KeychainError> = .success(SymmetricKey(size: .bits256))
+	var createResult: Result<SymmetricKey, KeychainError> = .success(SymmetricKey(size: .bits256))
 	
 	func createKey() throws -> SymmetricKey {
 		try createResult.get()

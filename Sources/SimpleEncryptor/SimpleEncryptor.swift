@@ -13,13 +13,6 @@ import CryptoKit
 /// The `SimpleEncryptor` class provides basic cipher (encryption & decryption) operations on `Data` or files, using the `CryptoKit` framework.
 /// All cipher operations are using a Symmetric key that is stored in the device's KeyChain.
 public class SimpleEncryptor {
-	
-	public static let defaultKeychainQuery: [CFString : Any] = [
-		kSecClass: kSecClassGenericPassword,
-		kSecAttrService: "encryption key", //role
-		kSecAttrAccount: "SwiftStorage", //login
-	]
-	
 	private let cryptoService: CryptoService
 	private let keyService: KeyService
 	private var key: SymmetricKey?

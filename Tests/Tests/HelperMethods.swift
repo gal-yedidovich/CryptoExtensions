@@ -7,7 +7,8 @@
 
 import Foundation
 
-func randomString(length: Int) -> String {
-	let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	return String((0..<length).map { _ in letters.randomElement()! })
+func randomData(length: Int) -> Data {
+	let range = UInt8.min...UInt8.max
+	let nums: [UInt8] = (0..<length).map { _ in UInt8.random(in: range) }
+	return Data(nums)
 }

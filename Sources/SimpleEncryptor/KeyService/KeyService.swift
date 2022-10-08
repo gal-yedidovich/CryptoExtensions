@@ -51,9 +51,11 @@ enum KeychainError: LocalizedError {
 	var errorDescription: String? {
 		switch self {
 		case .fetchKeyError(let status):
-			return "Unable to fetch key, os-status: '\(status)'"
+			let msg = SecCopyErrorMessageString(status, nil) as? String ?? ""
+			return "Unable to fetch key, os-status: '\(status)'. \(msg)"
 		case .storeKeyError(let status):
-			return "Unable to store key, os-status: '\(status)'"
+			let msg = SecCopyErrorMessageString(status, nil) as? String ?? ""
+			return "Unable to store key, os-status: '\(status)'. \(msg)"
 		}
 	}
 }

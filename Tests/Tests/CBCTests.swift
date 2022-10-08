@@ -11,11 +11,11 @@ import CBC
 
 class CBCTests: XCTestCase {
 	let key = SymmetricKey(size: .bits256)
-	let iv = Data(randomString(length: 16).utf8)
+	let iv = randomData(length: 16)
 	
 	func testShouldEncryptDataSuccess() throws {
 		//Given
-		let data = Data(randomString(length: 100).utf8)
+		let data = randomData(length: 100)
 
 		//When
 		let enc = try AES.CBC.encrypt(data, using: key, iv: iv)
@@ -27,7 +27,7 @@ class CBCTests: XCTestCase {
 	
 	func testShouldCipherDataSuccess() throws {
 		//Given
-		let data = Data(randomString(length: 100).utf8)
+		let data = randomData(length: 100)
 		let partOne = data.subdata(in: 0 ..< data.count / 2)
 		let partTwo = data.subdata(in: data.count / 2 ..< data.count)
 		let cipher1 = try AES.CBC.Cipher(.encrypt, using: key, iv: iv)
@@ -49,7 +49,7 @@ class CBCTests: XCTestCase {
 
 	func testShouldCipherStreamSuccess() throws {
 		//Given
-		let data = Data(randomString(length: 10_000).utf8)
+		let data = randomData(length: 10_000)
 		let encrypted = try AES.CBC.encrypt(data, using: key, iv: iv)
 		let cipher = try AES.CBC.Cipher(.decrypt, using: key, iv: iv)
 		let input = InputStream(data: encrypted)
