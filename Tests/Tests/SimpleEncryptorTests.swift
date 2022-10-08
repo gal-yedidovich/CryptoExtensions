@@ -61,7 +61,7 @@ class SimpleEncryptorTests: XCTestCase {
 	@available(macOS 12.0, iOS 15.0, *)
 	func testShouldCallProgressTenTimes() async throws {
 		//Given
-		let EXPECTED_NUMBER_OF_STEPS = 10
+		let EXPECTED_NUMBER_OF_STEPS = 5
 		
 		let encryptor = SimpleEncryptor(type: .chachaPoly, keyService: MockKeyService())
 		let data = randomData(length: ChaChaPolyService.BUFFER_SIZE * EXPECTED_NUMBER_OF_STEPS)
@@ -86,7 +86,7 @@ class SimpleEncryptorTests: XCTestCase {
 	func testShouldThrowErrorWhenFailsToCreateKey() {
 		//Given
 		let EXPECTED_ERROR: KeychainError = .storeKeyError(errSecAuthFailed)
-		let keyService = MockKeyService(fetchResult: .success(nil), createResult: .failure(EXPECTED_ERROR))
+		let keyService = MockKeyService(createResult: .failure(EXPECTED_ERROR))
 		let encryptor = SimpleEncryptor(type: .gcm, keyService: keyService)
 		let data = randomData(length: 100)
 		

@@ -38,7 +38,7 @@ class CBCTests: XCTestCase {
 		let e2 = try cipher1.update(partTwo)
 		let e3 = try cipher1.finalize()
 
-		var decrypted = try cipher2.update(e1)
+		var decrypted: Data = try cipher2.update(e1)
 		decrypted += try cipher2.update(e2)
 		decrypted += try cipher2.update(e3)
 		decrypted += try cipher2.finalize()
