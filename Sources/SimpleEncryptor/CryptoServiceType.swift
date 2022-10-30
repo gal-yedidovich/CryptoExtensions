@@ -22,7 +22,7 @@ public enum CryptoServiceType {
 			return CBCService(iv: iv)
 		case .chachaPoly:
 			return ChaChaPolyService()
-		default:
+		case .gcm:
 			return GCMService()
 		}
 	}

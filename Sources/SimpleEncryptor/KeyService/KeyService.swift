@@ -20,7 +20,7 @@ struct KeychainKeyService: KeyService {
 		var query = param.queryDictionary
 		query[kSecReturnData] = true
 		
-		var item: CFTypeRef? //reference to the result
+		var item: CFTypeRef? // Reference to the result
 		let readStatus = SecItemCopyMatching(query as CFDictionary, &item)
 		switch readStatus {
 		case errSecSuccess: return SymmetricKey(data: item as! Data) // Convert back to a key.
@@ -30,10 +30,10 @@ struct KeychainKeyService: KeyService {
 	}
 	
 	func createKey() throws -> SymmetricKey {
-		let newKey = SymmetricKey(size: .bits256) //create new key
+		let newKey = SymmetricKey(size: .bits256) // Create new key
 		var query = param.queryDictionary
 		query[kSecAttrAccessible] = param.keyAccess.value
-		query[kSecValueData] = newKey.dataRepresentation //request to get the result (key) as data
+		query[kSecValueData] = newKey.dataRepresentation // Request to get the result (key) as data
 		
 		let status = SecItemAdd(query as CFDictionary, nil)
 		guard status == errSecSuccess else {

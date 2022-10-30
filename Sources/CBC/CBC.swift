@@ -46,14 +46,14 @@ public extension AES {
 			var outputBuffer = [UInt8](repeating: 0, count: bufferSize)
 			var numBytesProcessed = 0
 			
-			let cryptStatus = CCCrypt(
+			let result = CCCrypt(
 				operation.operation, CCAlgorithm(kCCAlgorithmAES), options, //params
 				keyData, keyData.count, ivData, inputBuffer, inputBuffer.count, //input data
 				&outputBuffer, bufferSize, &numBytesProcessed //output data
 			)
 			
-			guard cryptStatus == CCCryptorStatus(kCCSuccess) else {
-				throw CBCError(message: "Operation Failed", status: cryptStatus)
+			guard result == CCCryptorStatus(kCCSuccess) else {
+				throw CBCError(message: "Operation Failed", status: result)
 			}
 			
 			outputBuffer.removeSubrange(numBytesProcessed..<outputBuffer.count) //trim extra padding

@@ -78,7 +78,7 @@ extension AES.CBC {
 			}
 			
 			guard status == CCCryptorStatus(kCCSuccess) else {
-				throw CBCError(message: "Could not finalize", status: status)
+				throw CBCError(message: "Could not finalize cipher", status: status)
 			}
 			
 			buffer.count = dataOutMoved
