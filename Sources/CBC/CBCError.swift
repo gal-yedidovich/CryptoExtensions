@@ -51,19 +51,13 @@ internal struct CBCError: LocalizedError {
 	}
 }
 
-
-public extension Data {
-	var bytes: [UInt8] {
-		[UInt8](self)
-	}
-}
-
-public extension SymmetricKey {
-	/// A Data instance created safely from the contiguous bytes without making any copies.
-	var dataRepresentation: Data {
-		return withUnsafeBytes { bytes in
-			let cfdata = CFDataCreateWithBytesNoCopy(nil, bytes.baseAddress?.assumingMemoryBound(to: UInt8.self), bytes.count, kCFAllocatorNull)
-			return (cfdata as Data?) ?? Data()
+internal enum CipherError: LocalizedError {
+	case finalized
+	
+	var errorDescription: String? {
+		switch self {
+		case .finalized:
+			return "Cipher is finalized"
 		}
 	}
 }

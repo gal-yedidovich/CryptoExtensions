@@ -13,7 +13,7 @@ extension AES.CBC {
 	/// Advanced Cipher, provides incremental crypto operation (encryption/decryption) on data.
 	public class Cipher {
 		private let context: CCCryptorRef
-		private var state: State
+		private var state: CipherState
 		
 		/// Initialize new cipher instance that can operate on data to either encrypt or decrypt it.
 		/// - Parameters:
@@ -34,7 +34,7 @@ extension AES.CBC {
 			}
 			
 			context = cryptor
-			state = OneState()
+			state = OpatationState()
 		}
 		
 		/// releases the crypto context
@@ -60,18 +60,18 @@ extension AES.CBC {
 			return try state.finalize(cipher: self, context: context)
 		}
 		
-		fileprivate func set(state: State) {
+		fileprivate func set(state: CipherState) {
 			self.state = state
 		}
 	}
 }
 
-fileprivate protocol State {
+fileprivate protocol CipherState {
 	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data
 	func finalize(cipher: AES.CBC.Cipher, context: CCCryptorRef) throws -> Data
 }
 
-private class OneState: State {
+private class OpatationState: CipherState {
 	private var buffer = Data()
 	
 	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data {
@@ -113,18 +113,7 @@ private class OneState: State {
 	}
 }
 
-enum CipherError: LocalizedError {
-	case finalized
-	
-	var errorDescription: String? {
-		switch self {
-		case .finalized:
-			return "Cipher is finalized"
-		}
-	}
-}
-
-private struct FinalizeState: State {
+private struct FinalizeState: CipherState {
 	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data {
 		throw CipherError.finalized
 	}
