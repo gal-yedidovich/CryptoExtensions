@@ -16,11 +16,11 @@ class CBCTests: XCTestCase {
 	func testShouldEncryptDataSuccess() throws {
 		//Given
 		let data = randomData(length: 100)
-
+		
 		//When
 		let enc = try AES.CBC.encrypt(data, using: key, iv: iv)
 		let dec = try AES.CBC.decrypt(enc, using: key, iv: iv)
-
+		
 		//Then
 		XCTAssertEqual(data, dec)
 	}
@@ -32,21 +32,21 @@ class CBCTests: XCTestCase {
 		let partTwo = data.subdata(in: data.count / 2 ..< data.count)
 		let cipher1 = try AES.CBC.Cipher(.encrypt, using: key, iv: iv)
 		let cipher2 = try AES.CBC.Cipher(.decrypt, using: key, iv: iv)
-
+		
 		//When
 		let e1 = try cipher1.update(partOne)
 		let e2 = try cipher1.update(partTwo)
 		let e3 = try cipher1.finalize()
-
+		
 		var decrypted: Data = try cipher2.update(e1)
 		decrypted += try cipher2.update(e2)
 		decrypted += try cipher2.update(e3)
 		decrypted += try cipher2.finalize()
-
+		
 		//Then
 		XCTAssertEqual(data, decrypted)
 	}
-
+	
 	func testShouldCipherStreamSuccess() throws {
 		//Given
 		let data = randomData(length: 10_000)
@@ -56,7 +56,7 @@ class CBCTests: XCTestCase {
 		var decrypted = Data()
 		var buffer = [UInt8](repeating: 0, count: 1024 * 32)
 		input.open()
-
+		
 		//When
 		while input.hasBytesAvailable {
 			let bytesRead = input.read(&buffer, maxLength: buffer.count)
@@ -67,5 +67,16 @@ class CBCTests: XCTestCase {
 		
 		//Then
 		XCTAssertEqual(data, decrypted)
+	}
+	
+	func testShouldThrow_afterFinalize() throws {
+		//Given
+		let cipher = try AES.CBC.Cipher(.decrypt, using: key, iv: iv)
+		_ = try cipher.finalize()
+		
+		//When
+		//Then
+		XCTAssertThrowsError(try cipher.update(Data()))
+		XCTAssertThrowsError(try cipher.finalize())
 	}
 }

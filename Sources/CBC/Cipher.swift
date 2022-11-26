@@ -13,7 +13,7 @@ extension AES.CBC {
 	/// Advanced Cipher, provides incremental crypto operation (encryption/decryption) on data.
 	public class Cipher {
 		private let context: CCCryptorRef
-		private var buffer = Data()
+		private var state: State
 		
 		/// Initialize new cipher instance that can operate on data to either encrypt or decrypt it.
 		/// - Parameters:
@@ -34,6 +34,7 @@ extension AES.CBC {
 			}
 			
 			context = cryptor
+			state = OneState()
 		}
 		
 		/// releases the crypto context
@@ -47,21 +48,7 @@ extension AES.CBC {
 		/// - Throws: an error when failing to process the data
 		/// - Returns: processed data, after crypto operation (encryption/decryption)
 		public func update(_ data: Data) throws -> Data {
-			let outputLength = CCCryptorGetOutputLength(context, data.count, false)
-			buffer.count = outputLength
-			var dataOutMoved = 0
-			
-			let rawData = data.bytes
-			let status = buffer.withUnsafeMutableBytes { bufferPtr in
-				CCCryptorUpdate(context, rawData, rawData.count, bufferPtr.baseAddress!, outputLength, &dataOutMoved)
-			}
-			
-			guard status == CCCryptorStatus(kCCSuccess) else {
-				throw CBCError(message: "Could not update", status: status)
-			}
-			
-			buffer.count = dataOutMoved
-			return buffer
+			return try state.update(cipher: self, context: context, data)
 		}
 		
 		/// finalizing the crypto process on the internal buffer.
@@ -70,20 +57,79 @@ extension AES.CBC {
 		/// - Throws: an error when failing to process the data
 		/// - Returns: the remaining data to process. possible to be just the padding
 		public func finalize() throws -> Data {
-			let outputLength = CCCryptorGetOutputLength(context, 0, true)
-			var dataOutMoved = 0
-			
-			let status = buffer.withUnsafeMutableBytes { bufferPtr in
-				CCCryptorFinal(context, bufferPtr.baseAddress!, outputLength, &dataOutMoved)
-			}
-			
-			guard status == CCCryptorStatus(kCCSuccess) else {
-				throw CBCError(message: "Could not finalize cipher", status: status)
-			}
-			
-			buffer.count = dataOutMoved
-			defer { buffer = Data() }
-			return buffer
+			return try state.finalize(cipher: self, context: context)
 		}
+		
+		fileprivate func set(state: State) {
+			self.state = state
+		}
+	}
+}
+
+fileprivate protocol State {
+	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data
+	func finalize(cipher: AES.CBC.Cipher, context: CCCryptorRef) throws -> Data
+}
+
+private class OneState: State {
+	private var buffer = Data()
+	
+	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data {
+		let outputLength = CCCryptorGetOutputLength(context, data.count, false)
+		buffer.count = outputLength
+		var dataOutMoved = 0
+		
+		let rawData = data.bytes
+		let status = buffer.withUnsafeMutableBytes { bufferPtr in
+			CCCryptorUpdate(context, rawData, rawData.count, bufferPtr.baseAddress!, outputLength, &dataOutMoved)
+		}
+		
+		guard status == CCCryptorStatus(kCCSuccess) else {
+			throw CBCError(message: "Could not update", status: status)
+		}
+		
+		buffer.count = dataOutMoved
+		return buffer
+	}
+	
+	func finalize(cipher: AES.CBC.Cipher, context: CCCryptorRef) throws -> Data {
+		let outputLength = CCCryptorGetOutputLength(context, 0, true)
+		var dataOutMoved = 0
+		
+		let status = buffer.withUnsafeMutableBytes { bufferPtr in
+			CCCryptorFinal(context, bufferPtr.baseAddress!, outputLength, &dataOutMoved)
+		}
+		
+		guard status == CCCryptorStatus(kCCSuccess) else {
+			throw CBCError(message: "Could not finalize cipher", status: status)
+		}
+		
+		buffer.count = dataOutMoved
+		defer {
+			buffer = Data()
+			cipher.set(state: FinalizeState())
+		}
+		return buffer
+	}
+}
+
+enum CipherError: LocalizedError {
+	case finalized
+	
+	var errorDescription: String? {
+		switch self {
+		case .finalized:
+			return "Cipher is finalized"
+		}
+	}
+}
+
+private struct FinalizeState: State {
+	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data {
+		throw CipherError.finalized
+	}
+	
+	func finalize(cipher: AES.CBC.Cipher, context: CCCryptorRef) throws -> Data {
+		throw CipherError.finalized
 	}
 }
