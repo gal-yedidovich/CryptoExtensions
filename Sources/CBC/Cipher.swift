@@ -13,7 +13,7 @@ extension AES.CBC {
 	/// Advanced Cipher, provides incremental crypto operation (encryption/decryption) on data.
 	public class Cipher {
 		private let context: CCCryptorRef
-		private var state: CipherState
+		fileprivate var state: CipherState
 		
 		/// Initialize new cipher instance that can operate on data to either encrypt or decrypt it.
 		/// - Parameters:
@@ -59,10 +59,6 @@ extension AES.CBC {
 		public func finalize() throws -> Data {
 			return try state.finalize(cipher: self, context: context)
 		}
-		
-		fileprivate func set(state: CipherState) {
-			self.state = state
-		}
 	}
 }
 
@@ -107,7 +103,7 @@ private class OpatationState: CipherState {
 		buffer.count = dataOutMoved
 		defer {
 			buffer = Data()
-			cipher.set(state: FinalizeState())
+			cipher.state = FinalizeState()
 		}
 		return buffer
 	}
