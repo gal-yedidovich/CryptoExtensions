@@ -17,10 +17,10 @@ extension AES.CBC {
 		
 		/// Initialize new cipher instance that can operate on data to either encrypt or decrypt it.
 		/// - Parameters:
-		///   - operation: the cryptografic operation
+		///   - operation: the cryptographic operation
 		///   - key: a symmetric key for operation
 		///   - iv: initial vector data
-		/// - Throws: when fails to create a cryptografic context
+		/// - Throws: when fails to create a cryptographic context
 		public init(_ operation: Operation, using key: SymmetricKey, iv: Data, options: CCOptions = pkcs7Padding) throws {
 			let keyData = key.dataRepresentation.bytes
 			let ivData = iv.bytes
@@ -34,7 +34,7 @@ extension AES.CBC {
 			}
 			
 			context = cryptor
-			state = OpatationState()
+			state = OperationState()
 		}
 		
 		/// releases the crypto context
@@ -67,7 +67,7 @@ fileprivate protocol CipherState {
 	func finalize(cipher: AES.CBC.Cipher, context: CCCryptorRef) throws -> Data
 }
 
-private class OpatationState: CipherState {
+private class OperationState: CipherState {
 	private var buffer = Data()
 	
 	func update(cipher: AES.CBC.Cipher, context: CCCryptorRef, _ data: Data) throws -> Data {

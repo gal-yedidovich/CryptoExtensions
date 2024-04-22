@@ -50,12 +50,7 @@ class SimpleEncryptorTests: XCTestCase {
 		
 		//When
 		//Then
-		do {
-			try await encryptor.encrypt(file: src, to: dest)
-			XCTFail("Should throw an error")
-		} catch {
-			XCTAssertEqual(error.localizedDescription, ProccessingError.fileNotFound.localizedDescription)
-		}
+		await assertThrows(try await encryptor.encrypt(file: src, to: dest), ProcessingError.fileNotFound)
 	}
 	
 	@available(macOS 12.0, iOS 15.0, *)
@@ -160,5 +155,23 @@ fileprivate struct MockKeyService: KeyService {
 	
 	func fetchKey() throws -> SymmetricKey? {
 		try fetchResult.get()
+	}
+}
+
+
+private func assertThrows<T>(
+	_ expression: @autoclosure () async throws -> T,
+	message: String? = nil,
+	file: StaticString = #filePath,
+	line: UInt = #line,
+	_ expectedError: LocalizedError? = nil
+) async {
+	do {
+		_ = try await expression()
+		XCTFail(message ?? "expression did not throw an error", file: file, line: line)
+	} catch {
+		if let expectedError {
+			XCTAssertEqual(error.localizedDescription, expectedError.localizedDescription)
+		}
 	}
 }

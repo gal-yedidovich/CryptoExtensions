@@ -17,7 +17,7 @@ func process(file src: URL, to dest: URL, using key: SymmetricKey, bufferSize: I
 			 operation: Operation, finalOperation: FinalOperation? = nil,
 			 onProgress: OnProgress?) async throws {
 	guard let fileSize = src.fileSize else {
-		throw ProccessingError.fileNotFound
+		throw ProcessingError.fileNotFound
 	}
 	
 	try await safeStream(to: dest) { output in
@@ -53,7 +53,7 @@ private func safeStream(to dest: URL, operation: SafeStreamBlock) async throws {
 	let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
 	
 	guard let output = OutputStream(url: tempFile, append: false) else {
-		throw ProccessingError.failedToCreateOutputStream
+		throw ProcessingError.failedToCreateOutputStream
 	}
 	
 	output.open()
@@ -83,7 +83,7 @@ extension OutputStream {
 	}
 }
 
-enum ProccessingError: LocalizedError {
+enum ProcessingError: LocalizedError {
 	case fileNotFound
 	case failedToCreateOutputStream
 	

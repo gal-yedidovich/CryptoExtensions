@@ -24,7 +24,7 @@ internal struct CBCError: LocalizedError {
 		case kCCParamError:
 			return "Illegal parameter value"
 		case kCCBufferTooSmall:
-			return "Insufficent buffer provided for specified operation"
+			return "Insufficient buffer provided for specified operation"
 		case kCCMemoryFailure:
 			return "Memory allocation failure"
 		case kCCAlignmentError:
@@ -36,7 +36,7 @@ internal struct CBCError: LocalizedError {
 		case kCCOverflow:
 			return "Overflow"
 		case kCCRNGFailure:
-			return "Rundom Number Generation Failure"
+			return "Random Number Generation Failure"
 		case kCCCallSequenceError:
 			return "Call Sequence Error"
 		case kCCKeySizeError:
